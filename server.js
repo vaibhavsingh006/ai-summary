@@ -12,6 +12,10 @@ const HF_API_URL =
   "https://api-inference.huggingface.co/models/facebook/bart-large-cnn";
 const HF_TOKEN = process.env.HF_API_KEY;
 
+app.get("/", (req, res) => {
+  res.send("Server is running! Use POST /summarize");
+});
+
 app.post("/summarize", async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Missing text" });
