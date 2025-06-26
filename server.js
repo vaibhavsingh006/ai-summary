@@ -119,59 +119,59 @@
 
 // app.listen(3000, () => console.log("Server is running on port 3000"));
 
+// server.js
 
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const fetch = require("node-fetch");
+import express from "express";
+import cors from "cors";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-
 const PORT = process.env.PORT || 3000;
 const HF_API_KEY = process.env.HF_API_KEY;
 
+app.use(cors());
+app.use(express.json());
+
 app.get("/", (req, res) => {
-  res.send("✅ Hugging Face summarizer running");
+  res.send("✅ Hugging Face summarizer is running");
 });
 
 app.post("/summarize", async (req, res) => {
   const { text } = req.body;
 
-  if (!text) {
-    return res.status(400).json({ summary: "No text provided" });
+  if (!text || text.trim().length === 0) {
+    return res.status(400).json({ summary: "❌ No text provided." });
   }
 
   try {
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${HF_API_KEY}`, // ✅ This is important
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: text }),
-      }
-    );
+    const response = await fetch("https://api-inference.huggingface.co/models/facebook/bart-large-cnn", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HF_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ inputs: text }),
+    });
 
     const result = await response.json();
-    console.log("📦 HF response:", result);
+    console.log("📦 HF Response:", JSON.stringify(result, null, 2));
 
     if (Array.isArray(result) && result[0]?.summary_text) {
       return res.json({ summary: result[0].summary_text });
     } else if (result?.error) {
-      return res.json({ summary: `❌ HF Error: ${result.error}` });
+      return res.json({ summary: `⚠️ HF Error: ${result.error}` });
     } else {
-      return res.json({ summary: "⚠️ Unexpected HF format." });
+      return res.json({ summary: "⚠️ Unexpected format from HF." });
     }
-  } catch (err) {
-    console.error("🔥 Server error:", err);
-    return res.status(500).json({ summary: "❌ Server error." });
+  } catch (error) {
+    console.error("🔥 Server Error:", error);
+    return res.status(500).json({ summary: "❌ Server error while summarizing." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
